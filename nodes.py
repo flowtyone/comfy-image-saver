@@ -177,7 +177,7 @@ class ImageSaveWithMetadata:
             "required": {
                 "images": ("IMAGE", ),
                 "filename": ("STRING", {"default": f'%time_%seed', "multiline": False}),
-                "path": ("STRING", {"default": '', "multiline": False}),
+                #"path": ("STRING", {"default": '', "multiline": False}),
                 "extension": (['png', 'jpeg', 'webp'],),
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
@@ -210,14 +210,14 @@ class ImageSaveWithMetadata:
     CATEGORY = "ImageSaverTools"
 
     def save_files(self, images, seed_value, steps, cfg, sampler_name, scheduler, positive, negative, modelname, quality_jpeg_or_webp,
-                   lossless_webp, width, height, counter, filename, path, extension, time_format, prompt=None, extra_pnginfo=None):
-        filename = make_filename(filename, seed_value, modelname, counter, time_format)
-        path = make_pathname(path, seed_value, modelname, counter, time_format)
+                   lossless_webp, width, height, counter, filename, extension, time_format, prompt=None, extra_pnginfo=None, path=""):
+        filename = make_filename(r"[\/\\\.]".replace(filename, ""), seed_value, modelname, counter, time_format)
+        #path = make_pathname(path, seed_value, modelname, counter, time_format)
         ckpt_path = folder_paths.get_full_path("checkpoints", modelname)
         basemodelname = parse_name(modelname)
         modelhash = calculate_sha256(ckpt_path)[:10]
         comment = f"{handle_whitespace(positive)}\nNegative prompt: {handle_whitespace(negative)}\nSteps: {steps}, Sampler: {sampler_name}{f'_{scheduler}' if scheduler != 'normal' else ''}, CFG Scale: {cfg}, Seed: {seed_value}, Size: {width}x{height}, Model hash: {modelhash}, Model: {basemodelname}, Version: ComfyUI"
-        output_path = os.path.join(self.output_dir, path)
+        output_path = self.output_dir #os.path.join(self.output_dir, path)
 
         if output_path.strip() != '':
             if not os.path.exists(output_path.strip()):
@@ -226,7 +226,7 @@ class ImageSaveWithMetadata:
 
         filenames = self.save_images(images, output_path, filename, comment, extension, quality_jpeg_or_webp, lossless_webp, prompt, extra_pnginfo)
 
-        subfolder = os.path.normpath(path)
+        subfolder = "." #os.path.normpath(path)
         return {"ui": {"images": map(lambda filename: {"filename": filename, "subfolder": subfolder if subfolder != '.' else '', "type": 'output'}, filenames)}}
 
     def save_images(self, images, output_path, filename_prefix, comment, extension, quality_jpeg_or_webp, lossless_webp, prompt=None, extra_pnginfo=None) -> list[str]:
